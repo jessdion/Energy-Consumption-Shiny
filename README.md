@@ -41,15 +41,17 @@ Based on the analysis, the team recommended:
 - **Data formats:** Parquet, CSV
 
 ## Data Sources
+## Data Sources
 
-The project used four datasets provided as part of the class assignment:
+All datasets were accessed programmatically via AWS S3 as part of the class assignment:
 
-- `staticHouse` — building-level characteristics
-- `energyUsage` — hourly electricity consumption per building
-- `weather` — weather data collected across all 50 states
-- `metaData` — supporting metadata
+- `static_house_info.parquet` — building-level characteristics
+- `data_dictionary.csv` — metadata and variable definitions
+- Energy usage and weather data retrieved by county code via S3
 
-Analysis was scoped to the top 10 most populous counties in North and South Carolina, filtered to the month of July.
+To replicate the analysis, run `energy_consumption_analysis.Rmd` — the data loads automatically from the source URLs.
+
+Analysis was scoped to the top 10 most populous counties in South Carolina, focusing on July as the peak summer demand month. 
 
 ## How to Run Locally
 https://github.com/jessdion/Energy-Consumption-Shiny.git
