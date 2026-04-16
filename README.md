@@ -65,11 +65,16 @@ shiny::runApp()
 ```
 
 ## Project Structure
+
+```
 Energy-Consumption-Shiny/
 ├── app.R               # Shiny app
 ├── analysis.R          # Full analysis script
 ├── data/               # Data files
 └── README.md
+```
+
+## Authors
 
 ## Authors
 **Jessica Aimunmondion** — Project Manager, Shiny App Development (sole), Presentation Design
