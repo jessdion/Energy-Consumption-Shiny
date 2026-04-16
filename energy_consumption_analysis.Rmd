@@ -1,0 +1,1281 @@
+---
+title: "TRUE Final Project"
+author: "Jessica Aimunmondion, Joel Barnes, Zeek Moore"
+date: "2025-04-29"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+#collecting the Data 
+
+```{r}
+#Retrieving the static house data frame and meta data frame
+library(arrow)
+library(tidyverse)
+houseDF = read_parquet('https://intro-datascience.s3.us-east-2.amazonaws.com/SC-data/static_house_info.parquet')
+metaDF = read_csv('https://intro-datascience.s3.us-east-2.amazonaws.com/SC-data/data_dictionary.csv')
+#Filter out the houses that only use electricity
+library(data.table)
+houseDF = houseDF[c(houseDF$in.clothes_dryer %like% 'Electric', houseDF$in.clothes_washer %like% 'Electric' ),]
+#Finding out all the different county codes and collect the top most populated counties
+county =data.frame(head(sort(table(houseDF$in.county), decreasing = TRUE), 10))
+#Separate each house base off county code
+c1 = houseDF[houseDF$in.county == county[1,1],]
+c2 = houseDF[houseDF$in.county == county[2,1],]
+c3 = houseDF[houseDF$in.county == county[3,1],]
+c4 = houseDF[houseDF$in.county == county[4,1],]
+c5 = houseDF[houseDF$in.county == county[5,1],]
+#c6 = houseDF[houseDF$in.county == county[6,1],]
+#c7 = houseDF[houseDF$in.county == county[7,1],]
+#c8 = houseDF[houseDF$in.county == county[8,1],]
+#c9 = houseDF[houseDF$in.county == county[9,1],]
+#c10 = houseDF[houseDF$in.county == county[10,1],]
+```
+
+```{r}
+#Sampling ten houses for each data set 
+houses1 = sample(c1$bldg_id, size = 10, replace = TRUE)
+houses2 = sample(c2$bldg_id, size = 10, replace = TRUE)
+houses3 = sample(c3$bldg_id, size = 10, replace = TRUE)
+houses4 = sample(c4$bldg_id, size = 10, replace = TRUE)
+houses5 = sample(c5$bldg_id, size = 10, replace = TRUE)
+#houses6 = sample(c6$bldg_id, size = 10, replace = TRUE)
+#houses7 = sample(c7$bldg_id, size = 10, replace = TRUE)
+#houses8 = sample(c8$bldg_id, size = 10, replace = TRUE)
+#houses9 = sample(c9$bldg_id, size = 10, replace = TRUE)
+#houses10 = sample(c10$bldg_id, size = 10, replace = TRUE)
+```
+
+#Collecting and filtering the the county weather 
+
+```{r}
+#Collecting the weather data from the top ten populated counties
+county$paste = paste0(trimws(county$Var1),'.csv' )
+county$paste = trimws(county$paste)
+weathercd1 = read_csv(trimws(paste0('https://intro-datascience.s3.us-east-2.amazonaws.com/SC-data/weather/2023-weather-data/',county[1,3])))
+weathercd2 = read_csv(trimws(paste0('https://intro-datascience.s3.us-east-2.amazonaws.com/SC-data/weather/2023-weather-data/',county[2,3])))
+weathercd3 = read_csv(trimws(paste0('https://intro-datascience.s3.us-east-2.amazonaws.com/SC-data/weather/2023-weather-data/',county[3,3])))
+weathercd4 = read_csv(trimws(paste0('https://intro-datascience.s3.us-east-2.amazonaws.com/SC-data/weather/2023-weather-data/',county[4,3])))
+weathercd5 = read_csv(trimws(paste0('https://intro-datascience.s3.us-east-2.amazonaws.com/SC-data/weather/2023-weather-data/',county[5,3])))
+#weathercd6 = read_csv(trimws(paste0('https://intro-datascience.s3.us-east-2.amazonaws.com/SC-data/weather/2023-weather-data/',county[6,3])))
+#weathercd7 = read_csv(trimws(paste0('https://intro-datascience.s3.us-east-2.amazonaws.com/SC-data/weather/2023-weather-data/',county[7,3])))
+#weathercd8 = read_csv(trimws(paste0('https://intro-datascience.s3.us-east-2.amazonaws.com/SC-data/weather/2023-weather-data/',county[8,3])))
+#weathercd9 = read_csv(trimws(paste0('https://intro-datascience.s3.us-east-2.amazonaws.com/SC-data/weather/2023-weather-data/',county[9,3])))
+#weathercd10 = read_csv(trimws(paste0('https://intro-datascience.s3.us-east-2.amazonaws.com/SC-data/weather/2023-weather-data/',county[10,3])))
+#trimws(paste0('https://intro-datascience.s3.us-east-2.amazonaws.com/SC-data/weather/2023-weather-data/',county[1,3]))
+```
+
+```{r}
+#Filtering out each weather date frame to only contain the month of July and only collect the first four columns which are the temperature in Celsius, humidity , and wind speed 
+weathercd1 = weathercd1[weathercd1$date_time >= '2018-06-30 20:00:00' & weathercd1$date_time < '2018-07-31 20:00:00',c(1:4)]
+weathercd2 = weathercd2[weathercd2$date_time >= '2018-06-30 20:00:00' & weathercd2$date_time < '2018-07-31 20:00:00',c(1:4)]
+weathercd3 = weathercd3[weathercd3$date_time >= '2018-06-30 20:00:00' & weathercd3$date_time < '2018-07-31 20:00:00',c(1:4)]
+weathercd4 = weathercd4[weathercd4$date_time >= '2018-06-30 20:00:00' & weathercd4$date_time < '2018-07-31 20:00:00',c(1:4)]
+weathercd5 = weathercd5[weathercd5$date_time >= '2018-06-30 20:00:00' & weathercd5$date_time < '2018-07-31 20:00:00',c(1:4)]
+#weathercd6 = weathercd6[weathercd6$date_time >= '2018-06-30 20:00:00' & weathercd6$date_time < '2018-07-31 20:00:00',c(1:4)]
+#weathercd7 = weathercd7[weathercd7$date_time >= '2018-06-30 20:00:00' & weathercd7$date_time < '2018-07-31 20:00:00',c(1:4)]
+#weathercd8 = weathercd8[weathercd8$date_time >= '2018-06-30 20:00:00' & weathercd8$date_time < '2018-07-31 20:00:00',c(1:4)]
+#weathercd9 = weathercd9[weathercd9$date_time >= '2018-06-30 20:00:00' & weathercd9$date_time < '2018-07-31 20:00:00',c(1:4)]
+#weathercd10 = weathercd10[weathercd10$date_time >= '2018-06-30 20:00:00' & weathercd10$date_time < '2018-07-31 20:00:00',c(1:4)]
+```
+
+```{r}
+#Add a new column to convert the temperature to Fahrenheit by creating function to convert it from Celsius
+convert_temp_to_fahrenheit <- function(celsius_temp) {
+  farenheit_temp <- celsius_temp * 9/5 + 32
+  return(farenheit_temp)
+}
+weathercd1$`Dry Bulb Temperature [°F]` = convert_temp_to_fahrenheit(weathercd1$`Dry Bulb Temperature [°C]`)
+weathercd2$`Dry Bulb Temperature [°F]` = convert_temp_to_fahrenheit(weathercd2$`Dry Bulb Temperature [°C]`)
+weathercd3$`Dry Bulb Temperature [°F]` = convert_temp_to_fahrenheit(weathercd3$`Dry Bulb Temperature [°C]`)
+weathercd4$`Dry Bulb Temperature [°F]` = convert_temp_to_fahrenheit(weathercd4$`Dry Bulb Temperature [°C]`)
+weathercd5$`Dry Bulb Temperature [°F]` = convert_temp_to_fahrenheit(weathercd5$`Dry Bulb Temperature [°C]`)
+#weathercd6$`Dry Bulb Temperature [°F]` = convert_temp_to_fahrenheit(weathercd6$`Dry Bulb Temperature [°C]`)
+#weathercd7$`Dry Bulb Temperature [°F]` = convert_temp_to_fahrenheit(weathercd7$`Dry Bulb Temperature [°C]`)
+#weathercd8$`Dry Bulb Temperature [°F]` = convert_temp_to_fahrenheit(weathercd8$`Dry Bulb Temperature [°C]`)
+#weathercd9$`Dry Bulb Temperature [°F]` = convert_temp_to_fahrenheit(weathercd9$`Dry Bulb Temperature [°C]`)
+#weathercd10$`Dry Bulb Temperature [°F]` = convert_temp_to_fahrenheit(weathercd10$`Dry Bulb Temperature [°C]`)
+```
+
+
+#Collecting the sample energy data
+
+
+```{r}
+#Collecting the energy information from the house building based of the county (starting with the most populated county)
+#Naming convention: enen= energy of the n house; cdn = county code of the house 
+ene1cd1 = read_parquet(paste0('https://intro-datascience.s3.us-east-2.amazonaws.com/SC-data/2023-houseData/',as.character(houses1[1]),'.parquet'))
+ene2cd1 = read_parquet(paste0('https://intro-datascience.s3.us-east-2.amazonaws.com/SC-data/2023-houseData/',as.character(houses1[2]),'.parquet'))
+ene3cd1 = read_parquet(paste0('https://intro-datascience.s3.us-east-2.amazonaws.com/SC-data/2023-houseData/',as.character(houses1[3]),'.parquet'))
+ene4cd1 = read_parquet(paste0('https://intro-datascience.s3.us-east-2.amazonaws.com/SC-data/2023-houseData/',as.character(houses1[4]),'.parquet'))
+ene5cd1 = read_parquet(paste0('https://intro-datascience.s3.us-east-2.amazonaws.com/SC-data/2023-houseData/',as.character(houses1[5]),'.parquet'))
+ene6cd1 = read_parquet(paste0('https://intro-datascience.s3.us-east-2.amazonaws.com/SC-data/2023-houseData/',as.character(houses1[6]),'.parquet'))
+ene7cd1 = read_parquet(paste0('https://intro-datascience.s3.us-east-2.amazonaws.com/SC-data/2023-houseData/',as.character(houses1[7]),'.parquet'))
+ene8cd1 = read_parquet(paste0('https://intro-datascience.s3.us-east-2.amazonaws.com/SC-data/2023-houseData/',as.character(houses1[8]),'.parquet'))
+ene9cd1 = read_parquet(paste0('https://intro-datascience.s3.us-east-2.amazonaws.com/SC-data/2023-houseData/',as.character(houses1[9]),'.parquet'))
+ene10cd1 = read_parquet(paste0('https://intro-datascience.s3.us-east-2.amazonaws.com/SC-data/2023-houseData/',as.character(houses1[10]),'.parquet'))
+```
+
+```{r}
+#County 2
+ene1cd2 = read_parquet(paste0('https://intro-datascience.s3.us-east-2.amazonaws.com/SC-data/2023-houseData/',as.character(houses2[1]),'.parquet'))
+ene2cd2 = read_parquet(paste0('https://intro-datascience.s3.us-east-2.amazonaws.com/SC-data/2023-houseData/',as.character(houses2[2]),'.parquet'))
+ene3cd2 = read_parquet(paste0('https://intro-datascience.s3.us-east-2.amazonaws.com/SC-data/2023-houseData/',as.character(houses2[3]),'.parquet'))
+ene4cd2 = read_parquet(paste0('https://intro-datascience.s3.us-east-2.amazonaws.com/SC-data/2023-houseData/',as.character(houses2[4]),'.parquet'))
+ene5cd2 = read_parquet(paste0('https://intro-datascience.s3.us-east-2.amazonaws.com/SC-data/2023-houseData/',as.character(houses2[5]),'.parquet'))
+ene6cd2 = read_parquet(paste0('https://intro-datascience.s3.us-east-2.amazonaws.com/SC-data/2023-houseData/',as.character(houses2[6]),'.parquet'))
+ene7cd2 = read_parquet(paste0('https://intro-datascience.s3.us-east-2.amazonaws.com/SC-data/2023-houseData/',as.character(houses2[7]),'.parquet'))
+ene8cd2 = read_parquet(paste0('https://intro-datascience.s3.us-east-2.amazonaws.com/SC-data/2023-houseData/',as.character(houses2[8]),'.parquet'))
+ene9cd2 = read_parquet(paste0('https://intro-datascience.s3.us-east-2.amazonaws.com/SC-data/2023-houseData/',as.character(houses2[9]),'.parquet'))
+ene10cd2 = read_parquet(paste0('https://intro-datascience.s3.us-east-2.amazonaws.com/SC-data/2023-houseData/',as.character(houses2[10]),'.parquet'))
+```
+
+```{r}
+#County 3
+ene1cd3 = read_parquet(paste0('https://intro-datascience.s3.us-east-2.amazonaws.com/SC-data/2023-houseData/',as.character(houses3[1]),'.parquet'))
+ene2cd3 = read_parquet(paste0('https://intro-datascience.s3.us-east-2.amazonaws.com/SC-data/2023-houseData/',as.character(houses3[2]),'.parquet'))
+ene3cd3 = read_parquet(paste0('https://intro-datascience.s3.us-east-2.amazonaws.com/SC-data/2023-houseData/',as.character(houses3[3]),'.parquet'))
+ene4cd3 = read_parquet(paste0('https://intro-datascience.s3.us-east-2.amazonaws.com/SC-data/2023-houseData/',as.character(houses3[4]),'.parquet'))
+ene5cd3 = read_parquet(paste0('https://intro-datascience.s3.us-east-2.amazonaws.com/SC-data/2023-houseData/',as.character(houses3[5]),'.parquet'))
+ene6cd3 = read_parquet(paste0('https://intro-datascience.s3.us-east-2.amazonaws.com/SC-data/2023-houseData/',as.character(houses3[6]),'.parquet'))
+ene7cd3 = read_parquet(paste0('https://intro-datascience.s3.us-east-2.amazonaws.com/SC-data/2023-houseData/',as.character(houses3[7]),'.parquet'))
+ene8cd3 = read_parquet(paste0('https://intro-datascience.s3.us-east-2.amazonaws.com/SC-data/2023-houseData/',as.character(houses3[8]),'.parquet'))
+ene9cd3 = read_parquet(paste0('https://intro-datascience.s3.us-east-2.amazonaws.com/SC-data/2023-houseData/',as.character(houses3[9]),'.parquet'))
+ene10cd3 = read_parquet(paste0('https://intro-datascience.s3.us-east-2.amazonaws.com/SC-data/2023-houseData/',as.character(houses3[10]),'.parquet'))
+```
+
+```{r}
+#County 4
+ene1cd4 = read_parquet(paste0('https://intro-datascience.s3.us-east-2.amazonaws.com/SC-data/2023-houseData/',as.character(houses4[1]),'.parquet'))
+ene2cd4 = read_parquet(paste0('https://intro-datascience.s3.us-east-2.amazonaws.com/SC-data/2023-houseData/',as.character(houses4[2]),'.parquet'))
+ene3cd4 = read_parquet(paste0('https://intro-datascience.s3.us-east-2.amazonaws.com/SC-data/2023-houseData/',as.character(houses4[3]),'.parquet'))
+ene4cd4 = read_parquet(paste0('https://intro-datascience.s3.us-east-2.amazonaws.com/SC-data/2023-houseData/',as.character(houses4[4]),'.parquet'))
+ene5cd4 = read_parquet(paste0('https://intro-datascience.s3.us-east-2.amazonaws.com/SC-data/2023-houseData/',as.character(houses4[5]),'.parquet'))
+ene6cd4 = read_parquet(paste0('https://intro-datascience.s3.us-east-2.amazonaws.com/SC-data/2023-houseData/',as.character(houses4[6]),'.parquet'))
+ene7cd4 = read_parquet(paste0('https://intro-datascience.s3.us-east-2.amazonaws.com/SC-data/2023-houseData/',as.character(houses4[7]),'.parquet'))
+ene8cd4 = read_parquet(paste0('https://intro-datascience.s3.us-east-2.amazonaws.com/SC-data/2023-houseData/',as.character(houses4[8]),'.parquet'))
+ene9cd4 = read_parquet(paste0('https://intro-datascience.s3.us-east-2.amazonaws.com/SC-data/2023-houseData/',as.character(houses4[9]),'.parquet'))
+ene10cd4 = read_parquet(paste0('https://intro-datascience.s3.us-east-2.amazonaws.com/SC-data/2023-houseData/',as.character(houses4[10]),'.parquet'))
+```
+
+```{r}
+#County 5
+ene1cd5 = read_parquet(paste0('https://intro-datascience.s3.us-east-2.amazonaws.com/SC-data/2023-houseData/',as.character(houses5[1]),'.parquet'))
+ene2cd5 = read_parquet(paste0('https://intro-datascience.s3.us-east-2.amazonaws.com/SC-data/2023-houseData/',as.character(houses5[2]),'.parquet'))
+ene3cd5 = read_parquet(paste0('https://intro-datascience.s3.us-east-2.amazonaws.com/SC-data/2023-houseData/',as.character(houses5[3]),'.parquet'))
+ene4cd5 = read_parquet(paste0('https://intro-datascience.s3.us-east-2.amazonaws.com/SC-data/2023-houseData/',as.character(houses5[4]),'.parquet'))
+ene5cd5 = read_parquet(paste0('https://intro-datascience.s3.us-east-2.amazonaws.com/SC-data/2023-houseData/',as.character(houses5[5]),'.parquet'))
+ene6cd5 = read_parquet(paste0('https://intro-datascience.s3.us-east-2.amazonaws.com/SC-data/2023-houseData/',as.character(houses5[6]),'.parquet'))
+ene7cd5 = read_parquet(paste0('https://intro-datascience.s3.us-east-2.amazonaws.com/SC-data/2023-houseData/',as.character(houses5[7]),'.parquet'))
+ene8cd5 = read_parquet(paste0('https://intro-datascience.s3.us-east-2.amazonaws.com/SC-data/2023-houseData/',as.character(houses5[8]),'.parquet'))
+ene9cd5 = read_parquet(paste0('https://intro-datascience.s3.us-east-2.amazonaws.com/SC-data/2023-houseData/',as.character(houses5[9]),'.parquet'))
+ene10cd5 = read_parquet(paste0('https://intro-datascience.s3.us-east-2.amazonaws.com/SC-data/2023-houseData/',as.character(houses5[10]),'.parquet'))
+```
+
+#Filltering out the July Data
+
+```{r}
+#Filtering the data to only contain the month of July and only uses electrical energy 
+library(data.table)
+ene1cd1 = ene1cd1[ene1cd1$time >= '2018-06-30 20:00:00' & ene1cd1$time <= '2018-08-01 00:00:00', (colnames(ene1cd1) %like% 'out.electricity' | colnames(ene1cd1) == 'time')]
+ene2cd1 = ene2cd1[ene2cd1$time >= '2018-06-30 20:00:00' & ene2cd1$time <= '2018-08-01 00:00:00', (colnames(ene2cd1) %like% 'out.electricity' | colnames(ene2cd1) == 'time')]
+ene3cd1 = ene3cd1[ene3cd1$time >= '2018-06-30 20:00:00' & ene3cd1$time <= '2018-08-01 00:00:00', (colnames(ene3cd1) %like% 'out.electricity' | colnames(ene3cd1) == 'time')]
+ene4cd1 = ene4cd1[ene4cd1$time >= '2018-06-30 20:00:00' & ene4cd1$time <= '2018-08-01 00:00:00', (colnames(ene4cd1) %like% 'out.electricity' | colnames(ene4cd1) == 'time')]
+ene5cd1 = ene5cd1[ene5cd1$time >= '2018-06-30 20:00:00' & ene5cd1$time <= '2018-08-01 00:00:00', (colnames(ene5cd1) %like% 'out.electricity' | colnames(ene5cd1) == 'time')]
+ene6cd1 = ene6cd1[ene6cd1$time >= '2018-06-30 20:00:00' & ene6cd1$time <= '2018-08-01 00:00:00', (colnames(ene6cd1) %like% 'out.electricity' | colnames(ene6cd1) == 'time')]
+ene7cd1 = ene7cd1[ene7cd1$time >= '2018-06-30 20:00:00' & ene7cd1$time <= '2018-08-01 00:00:00', (colnames(ene7cd1) %like% 'out.electricity' | colnames(ene7cd1) == 'time')]
+ene8cd1 = ene8cd1[ene8cd1$time >= '2018-06-30 20:00:00' & ene8cd1$time <= '2018-08-01 00:00:00', (colnames(ene8cd1) %like% 'out.electricity' | colnames(ene8cd1) == 'time')]
+ene9cd1 = ene9cd1[ene9cd1$time >= '2018-06-30 20:00:00' & ene9cd1$time <= '2018-08-01 00:00:00', (colnames(ene9cd1) %like% 'out.electricity' | colnames(ene9cd1) == 'time')]
+ene10cd1 = ene10cd1[ene10cd1$time >= '2018-06-30 20:00:00' & ene10cd1$time <= '2018-08-01 00:00:00', (colnames(ene10cd1) %like% 'out.electricity' | colnames(ene10cd1) == 'time')]
+```
+
+```{r}
+#County 2
+ene1cd2 = ene1cd2[ene1cd2$time >= '2018-06-30 20:00:00' & ene1cd2$time <= '2018-08-01 00:00:00', (colnames(ene1cd2) %like% 'out.electricity' | colnames(ene1cd2) == 'time')]
+ene2cd2 = ene2cd2[ene2cd2$time >= '2018-06-30 20:00:00' & ene2cd2$time <= '2018-08-01 00:00:00', (colnames(ene2cd2) %like% 'out.electricity' | colnames(ene2cd2) == 'time')]
+ene3cd2 = ene3cd2[ene3cd2$time >= '2018-06-30 20:00:00' & ene3cd2$time <= '2018-08-01 00:00:00', (colnames(ene3cd2) %like% 'out.electricity' | colnames(ene3cd2) == 'time')]
+ene4cd2 = ene4cd2[ene4cd2$time >= '2018-06-30 20:00:00' & ene4cd2$time <= '2018-08-01 00:00:00', (colnames(ene4cd2) %like% 'out.electricity' | colnames(ene4cd2) == 'time')]
+ene5cd2 = ene5cd2[ene5cd2$time >= '2018-06-30 20:00:00' & ene5cd2$time <= '2018-08-01 00:00:00', (colnames(ene5cd2) %like% 'out.electricity' | colnames(ene5cd2) == 'time')]
+ene6cd2 = ene6cd2[ene6cd2$time >= '2018-06-30 20:00:00' & ene6cd2$time <= '2018-08-01 00:00:00', (colnames(ene6cd2) %like% 'out.electricity' | colnames(ene6cd2) == 'time')]
+ene7cd2 = ene7cd2[ene7cd2$time >= '2018-06-30 20:00:00' & ene7cd2$time <= '2018-08-01 00:00:00', (colnames(ene7cd2) %like% 'out.electricity' | colnames(ene7cd2) == 'time')]
+ene8cd2 = ene8cd2[ene8cd2$time >= '2018-06-30 20:00:00' & ene8cd2$time <= '2018-08-01 00:00:00', (colnames(ene8cd2) %like% 'out.electricity' | colnames(ene8cd2) == 'time')]
+ene9cd2 = ene9cd2[ene9cd2$time >= '2018-06-30 20:00:00' & ene9cd2$time <= '2018-08-01 00:00:00', (colnames(ene9cd2) %like% 'out.electricity' | colnames(ene9cd2) == 'time')]
+ene10cd2 = ene10cd2[ene10cd2$time >= '2018-06-30 20:00:00' & ene10cd2$time <= '2018-08-01 00:00:00', (colnames(ene10cd2) %like% 'out.electricity' | colnames(ene10cd2) == 'time')]
+```
+
+```{r}
+#County 3
+ene1cd3 = ene1cd3[ene1cd3$time >= '2018-06-30 20:00:00' & ene1cd3$time <= '2018-08-01 00:00:00', (colnames(ene1cd3) %like% 'out.electricity' | colnames(ene1cd3) == 'time')]
+ene2cd3 = ene2cd3[ene2cd3$time >= '2018-06-30 20:00:00' & ene2cd3$time <= '2018-08-01 00:00:00', (colnames(ene2cd3) %like% 'out.electricity' | colnames(ene2cd3) == 'time')]
+ene3cd3 = ene3cd3[ene3cd3$time >= '2018-06-30 20:00:00' & ene3cd3$time <= '2018-08-01 00:00:00', (colnames(ene3cd3) %like% 'out.electricity' | colnames(ene3cd3) == 'time')]
+ene4cd3 = ene4cd3[ene4cd3$time >= '2018-06-30 20:00:00' & ene4cd3$time <= '2018-08-01 00:00:00', (colnames(ene4cd3) %like% 'out.electricity' | colnames(ene4cd3) == 'time')]
+ene5cd3 = ene5cd3[ene5cd3$time >= '2018-06-30 20:00:00' & ene5cd3$time <= '2018-08-01 00:00:00', (colnames(ene5cd3) %like% 'out.electricity' | colnames(ene5cd3) == 'time')]
+ene6cd3 = ene6cd3[ene6cd3$time >= '2018-06-30 20:00:00' & ene6cd3$time <= '2018-08-01 00:00:00', (colnames(ene6cd3) %like% 'out.electricity' | colnames(ene6cd3) == 'time')]
+ene7cd3 = ene7cd3[ene7cd3$time >= '2018-06-30 20:00:00' & ene7cd3$time <= '2018-08-01 00:00:00', (colnames(ene7cd3) %like% 'out.electricity' | colnames(ene7cd3) == 'time')]
+ene8cd3 = ene8cd3[ene8cd3$time >= '2018-06-30 20:00:00' & ene8cd3$time <= '2018-08-01 00:00:00', (colnames(ene8cd3) %like% 'out.electricity' | colnames(ene8cd3) == 'time')]
+ene9cd3 = ene9cd3[ene9cd3$time >= '2018-06-30 20:00:00' & ene9cd3$time <= '2018-08-01 00:00:00', (colnames(ene9cd3) %like% 'out.electricity' | colnames(ene9cd3) == 'time')]
+ene10cd3 = ene10cd3[ene10cd3$time >= '2018-06-30 20:00:00' & ene10cd3$time <= '2018-08-01 00:00:00', (colnames(ene10cd3) %like% 'out.electricity' | colnames(ene10cd3) == 'time')]
+```
+
+```{r}
+#County 4
+ene1cd4 = ene1cd4[ene1cd4$time >= '2018-06-30 20:00:00' & ene1cd4$time <= '2018-08-01 00:00:00', (colnames(ene1cd4) %like% 'out.electricity' | colnames(ene1cd4) == 'time')]
+ene2cd4 = ene2cd4[ene2cd4$time >= '2018-06-30 20:00:00' & ene2cd4$time <= '2018-08-01 00:00:00', (colnames(ene2cd4) %like% 'out.electricity' | colnames(ene2cd4) == 'time')]
+ene3cd4 = ene3cd4[ene3cd4$time >= '2018-06-30 20:00:00' & ene3cd4$time <= '2018-08-01 00:00:00', (colnames(ene3cd4) %like% 'out.electricity' | colnames(ene3cd4) == 'time')]
+ene4cd4 = ene4cd4[ene4cd4$time >= '2018-06-30 20:00:00' & ene4cd4$time <= '2018-08-01 00:00:00', (colnames(ene4cd4) %like% 'out.electricity' | colnames(ene4cd4) == 'time')]
+ene5cd4 = ene5cd4[ene5cd4$time >= '2018-06-30 20:00:00' & ene5cd4$time <= '2018-08-01 00:00:00', (colnames(ene5cd4) %like% 'out.electricity' | colnames(ene5cd4) == 'time')]
+ene6cd4 = ene6cd4[ene6cd4$time >= '2018-06-30 20:00:00' & ene6cd4$time <= '2018-08-01 00:00:00', (colnames(ene6cd4) %like% 'out.electricity' | colnames(ene6cd4) == 'time')]
+ene7cd4 = ene7cd4[ene7cd4$time >= '2018-06-30 20:00:00' & ene7cd4$time <= '2018-08-01 00:00:00', (colnames(ene7cd4) %like% 'out.electricity' | colnames(ene7cd4) == 'time')]
+ene8cd4 = ene8cd4[ene8cd4$time >= '2018-06-30 20:00:00' & ene8cd4$time <= '2018-08-01 00:00:00', (colnames(ene8cd4) %like% 'out.electricity' | colnames(ene8cd4) == 'time')]
+ene9cd4 = ene9cd4[ene9cd4$time >= '2018-06-30 20:00:00' & ene9cd4$time <= '2018-08-01 00:00:00', (colnames(ene9cd4) %like% 'out.electricity' | colnames(ene9cd4) == 'time')]
+ene10cd4 = ene10cd4[ene10cd4$time >= '2018-06-30 20:00:00' & ene10cd4$time <= '2018-08-01 00:00:00', (colnames(ene10cd4) %like% 'out.electricity' | colnames(ene10cd4) == 'time')]
+```
+
+```{r}
+#County 5
+ene1cd5 = ene1cd5[ene1cd5$time >= '2018-06-30 20:00:00' & ene1cd5$time <= '2018-08-01 00:00:00', (colnames(ene1cd5) %like% 'out.electricity' | colnames(ene1cd5) == 'time')]
+ene2cd5 = ene2cd5[ene2cd5$time >= '2018-06-30 20:00:00' & ene2cd5$time <= '2018-08-01 00:00:00', (colnames(ene2cd5) %like% 'out.electricity' | colnames(ene2cd5) == 'time')]
+ene3cd5 = ene3cd5[ene3cd5$time >= '2018-06-30 20:00:00' & ene3cd5$time <= '2018-08-01 00:00:00', (colnames(ene3cd5) %like% 'out.electricity' | colnames(ene3cd5) == 'time')]
+ene4cd5 = ene4cd5[ene4cd5$time >= '2018-06-30 20:00:00' & ene4cd5$time <= '2018-08-01 00:00:00', (colnames(ene4cd5) %like% 'out.electricity' | colnames(ene4cd5) == 'time')]
+ene5cd5 = ene5cd5[ene5cd5$time >= '2018-06-30 20:00:00' & ene5cd5$time <= '2018-08-01 00:00:00', (colnames(ene5cd5) %like% 'out.electricity' | colnames(ene5cd5) == 'time')]
+ene6cd5 = ene6cd5[ene6cd5$time >= '2018-06-30 20:00:00' & ene6cd5$time <= '2018-08-01 00:00:00', (colnames(ene6cd5) %like% 'out.electricity' | colnames(ene6cd5) == 'time')]
+ene7cd5 = ene7cd5[ene7cd5$time >= '2018-06-30 20:00:00' & ene7cd5$time <= '2018-08-01 00:00:00', (colnames(ene7cd5) %like% 'out.electricity' | colnames(ene7cd5) == 'time')]
+ene8cd5 = ene8cd5[ene8cd5$time >= '2018-06-30 20:00:00' & ene8cd5$time <= '2018-08-01 00:00:00', (colnames(ene8cd5) %like% 'out.electricity' | colnames(ene8cd5) == 'time')]
+ene9cd5 = ene9cd5[ene9cd5$time >= '2018-06-30 20:00:00' & ene9cd5$time <= '2018-08-01 00:00:00', (colnames(ene9cd5) %like% 'out.electricity' | colnames(ene9cd5) == 'time')]
+ene10cd5 = ene10cd5[ene10cd5$time >= '2018-06-30 20:00:00' & ene10cd5$time <= '2018-08-01 00:00:00', (colnames(ene10cd5) %like% 'out.electricity' | colnames(ene10cd5) == 'time')]
+```
+
+#Calculating the total electricity usage
+
+```{r}
+#Creating a new column to record the total sum of hourly data
+ene1cd1$total.electricity = rowSums(ene1cd1[,c(1:24)])
+ene2cd1$total.electricity = rowSums(ene2cd1[,c(1:24)])
+ene3cd1$total.electricity = rowSums(ene3cd1[,c(1:24)])
+ene4cd1$total.electricity = rowSums(ene4cd1[,c(1:24)])
+ene5cd1$total.electricity = rowSums(ene5cd1[,c(1:24)])
+ene6cd1$total.electricity = rowSums(ene6cd1[,c(1:24)])
+ene7cd1$total.electricity = rowSums(ene7cd1[,c(1:24)])
+ene8cd1$total.electricity = rowSums(ene8cd1[,c(1:24)])
+ene9cd1$total.electricity = rowSums(ene9cd1[,c(1:24)])
+ene10cd1$total.electricity = rowSums(ene10cd1[,c(1:24)])
+```
+
+```{r}
+#county 2
+ene1cd2$total.electricity = rowSums(ene1cd2[,c(1:24)])
+ene2cd2$total.electricity = rowSums(ene2cd2[,c(1:24)])
+ene3cd2$total.electricity = rowSums(ene3cd2[,c(1:24)])
+ene4cd2$total.electricity = rowSums(ene4cd2[,c(1:24)])
+ene5cd2$total.electricity = rowSums(ene5cd2[,c(1:24)])
+ene6cd2$total.electricity = rowSums(ene6cd2[,c(1:24)])
+ene7cd2$total.electricity = rowSums(ene7cd2[,c(1:24)])
+ene8cd2$total.electricity = rowSums(ene8cd2[,c(1:24)])
+ene9cd2$total.electricity = rowSums(ene9cd2[,c(1:24)])
+ene10cd2$total.electricity = rowSums(ene10cd2[,c(1:24)])
+```
+
+```{r}
+#County 3
+ene1cd3$total.electricity = rowSums(ene1cd3[,c(1:24)])
+ene2cd3$total.electricity = rowSums(ene2cd3[,c(1:24)])
+ene3cd3$total.electricity = rowSums(ene3cd3[,c(1:24)])
+ene4cd3$total.electricity = rowSums(ene4cd3[,c(1:24)])
+ene5cd3$total.electricity = rowSums(ene5cd3[,c(1:24)])
+ene6cd3$total.electricity = rowSums(ene6cd3[,c(1:24)])
+ene7cd3$total.electricity = rowSums(ene7cd3[,c(1:24)])
+ene8cd3$total.electricity = rowSums(ene3cd1[,c(1:24)])
+ene9cd3$total.electricity = rowSums(ene3cd1[,c(1:24)])
+ene10cd3$total.electricity = rowSums(ene10cd3[,c(1:24)])
+```
+
+```{r}
+#County 4
+ene1cd4$total.electricity = rowSums(ene1cd4[,c(1:24)])
+ene2cd4$total.electricity = rowSums(ene2cd4[,c(1:24)])
+ene3cd4$total.electricity = rowSums(ene3cd4[,c(1:24)])
+ene4cd4$total.electricity = rowSums(ene4cd4[,c(1:24)])
+ene5cd4$total.electricity = rowSums(ene5cd4[,c(1:24)])
+ene6cd4$total.electricity = rowSums(ene6cd4[,c(1:24)])
+ene7cd4$total.electricity = rowSums(ene7cd4[,c(1:24)])
+ene8cd4$total.electricity = rowSums(ene8cd4[,c(1:24)])
+ene9cd4$total.electricity = rowSums(ene9cd4[,c(1:24)])
+ene10cd4$total.electricity = rowSums(ene10cd4[,c(1:24)])
+```
+
+```{r}
+#County 5
+ene1cd5$total.electricity = rowSums(ene1cd5[,c(1:24)])
+ene2cd5$total.electricity = rowSums(ene2cd5[,c(1:24)])
+ene3cd5$total.electricity = rowSums(ene3cd5[,c(1:24)])
+ene4cd5$total.electricity = rowSums(ene4cd5[,c(1:24)])
+ene5cd5$total.electricity = rowSums(ene5cd5[,c(1:24)])
+ene6cd5$total.electricity = rowSums(ene6cd5[,c(1:24)])
+ene7cd5$total.electricity = rowSums(ene7cd5[,c(1:24)])
+ene8cd5$total.electricity = rowSums(ene8cd5[,c(1:24)])
+ene9cd5$total.electricity = rowSums(ene9cd5[,c(1:24)])
+ene10cd5$total.electricity = rowSums(ene10cd5[,c(1:24)])
+```
+
+#Creating the total energy usage sample data frame
+
+```{r}
+#Combining all the total electricity columns into one dataframe
+eneTotalcd1 = data.frame('house1'= ene1cd1$total.electricity,'house2'= ene2cd1$total.electricity,'house3'= ene3cd1$total.electricity,'house4'= ene4cd1$total.electricity,'house5'= ene5cd1$total.electricity,'house6'= ene6cd1$total.electricity,'house7'= ene7cd1$total.electricity,'house8'= ene8cd1$total.electricity,'house9'= ene9cd1$total.electricity,'house10'= ene10cd1$total.electricity,'time' = ene10cd1$time)
+eneTotalcd1$date_time = as_datetime(eneTotalcd1$time)
+eneTotalcd1$total = rowSums(eneTotalcd1[,c(1:10)])
+eneTotalcd1$average = rowMeans(eneTotalcd1[,c(1:10)])
+```
+
+```{r}
+#County 2
+eneTotalcd2 = data.frame('house1'= ene1cd2$total.electricity,'house2'= ene2cd2$total.electricity,'house3'= ene3cd2$total.electricity,'house4'= ene4cd2$total.electricity,'house5'= ene5cd2$total.electricity,'house6'= ene6cd2$total.electricity,'house7'= ene7cd2$total.electricity,'house8'= ene8cd2$total.electricity,'house9'= ene9cd2$total.electricity,'house10'= ene10cd2$total.electricity,'time' = ene10cd2$time)
+eneTotalcd2$date_time = as_datetime(eneTotalcd2$time)
+eneTotalcd2$total = rowSums(eneTotalcd2[,c(1:10)])
+eneTotalcd2$average = rowMeans(eneTotalcd2[,c(1:10)])
+```
+
+```{r}
+#County 3
+eneTotalcd3 = data.frame('house1'= ene1cd3$total.electricity,'house2'= ene2cd3$total.electricity,'house3'= ene3cd3$total.electricity,'house4'= ene4cd3$total.electricity,'house5'= ene5cd3$total.electricity,'house6'= ene6cd3$total.electricity,'house7'= ene7cd3$total.electricity,'house8'= ene8cd1$total.electricity,'house9'= ene9cd3$total.electricity,'house10'= ene10cd3$total.electricity,'time' = ene10cd3$time)
+eneTotalcd3$date_time = as_datetime(eneTotalcd3$time)
+eneTotalcd3$total = rowSums(eneTotalcd3[,c(1:10)])
+eneTotalcd3$average = rowMeans(eneTotalcd3[,c(1:10)])
+```
+
+```{r}
+#County 4
+eneTotalcd4 = data.frame('house1'= ene1cd4$total.electricity,'house2'= ene2cd4$total.electricity,'house3'= ene3cd4$total.electricity,'house4'= ene4cd4$total.electricity,'house5'= ene5cd4$total.electricity,'house6'= ene6cd4$total.electricity,'house7'= ene7cd4$total.electricity,'house8'= ene8cd4$total.electricity,'house9'= ene9cd4$total.electricity,'house10'= ene10cd4$total.electricity,'time' = ene10cd4$time)
+eneTotalcd4$date_time = as_datetime(eneTotalcd4$time)
+eneTotalcd4$total = rowSums(eneTotalcd4[,c(1:10)])
+eneTotalcd4$average = rowMeans(eneTotalcd4[,c(1:10)])
+```
+
+```{r}
+#County 5
+eneTotalcd5 = data.frame('house1'= ene1cd5$total.electricity,'house2'= ene2cd5$total.electricity,'house3'= ene3cd5$total.electricity,'house4'= ene4cd5$total.electricity,'house5'= ene5cd5$total.electricity,'house6'= ene6cd5$total.electricity,'house7'= ene7cd5$total.electricity,'house8'= ene8cd5$total.electricity,'house9'= ene9cd5$total.electricity,'house10'= ene10cd5$total.electricity,'time' = ene10cd5$time)
+eneTotalcd5$date_time = as_datetime(eneTotalcd5$time)
+eneTotalcd5$total = rowSums(eneTotalcd5[,c(1:10)])
+eneTotalcd5$average = rowMeans(eneTotalcd5[,c(1:10)])
+```
+
+#Mearging the energy and weather data frames based on time
+
+```{r}
+#Merging the weather data and the energy data based on county code
+library(dplyr)
+WeaEneCd1 = eneTotalcd1 %>%
+  left_join(weathercd1, by = "date_time")
+#Getting rid of the extra time colum
+WeaEneCd1 = WeaEneCd1[,c(1:11,13:18)]
+#Creating a group column based on the hour
+WeaEneCd1$hour = format(WeaEneCd1$time, "%H")
+```
+
+```{r}
+#County 2
+WeaEneCd2 = eneTotalcd2 %>%
+  left_join(weathercd2, by = "date_time")
+#Getting rid of the extra time colum
+WeaEneCd2 = WeaEneCd2[,c(1:11,13:18)]
+#Creating a group column based on the hour
+WeaEneCd2$hour = format(WeaEneCd2$time, "%H")
+```
+
+```{r}
+#County 3
+WeaEneCd3 = eneTotalcd3 %>%
+  left_join(weathercd3, by = "date_time")
+#Getting rid of the extra time colum
+WeaEneCd3 = WeaEneCd3[,c(1:11,13:18)]
+#Creating a group column based on the hour
+WeaEneCd3$hour = format(WeaEneCd3$time, "%H")
+```
+
+```{r}
+#County 4
+WeaEneCd4 = eneTotalcd4 %>%
+  left_join(weathercd4, by = "date_time")
+#Getting rid of the extra time colum
+WeaEneCd4 = WeaEneCd4[,c(1:11,13:18)]
+#Creating a group column based on the hour
+WeaEneCd4$hour = format(WeaEneCd4$time, "%H")
+```
+
+```{r}
+#County 5
+WeaEneCd5 = eneTotalcd5 %>%
+  left_join(weathercd5, by = "date_time")
+#Getting rid of the extra time colum
+WeaEneCd5 = WeaEneCd5[,c(1:11,13:18)]
+#Creating a group column based on the hour
+WeaEneCd5$hour = format(WeaEneCd5$time, "%H")
+```
+
+#Creating the hourly data frame for each county 
+
+```{r}
+#Creating a group data frame based on hourly data per county code
+hourly_datacd1 = WeaEneCd1 %>%
+  group_by(hour) %>%
+  summarize(avg_electricity =  mean(total, na.rm = TRUE),
+            avg_temperature = mean(`Dry Bulb Temperature [°F]`, na.rm = TRUE),
+            .group ="drop"
+            )
+```
+
+```{r}
+#County 2
+hourly_datacd2 = WeaEneCd2 %>%
+  group_by(hour) %>%
+  summarize(avg_electricity =  mean(total, na.rm = TRUE),
+            avg_temperature = mean(`Dry Bulb Temperature [°F]`, na.rm = TRUE),
+            .group ="drop"
+            )
+```
+
+```{r}
+#County 3
+hourly_datacd3 = WeaEneCd3 %>%
+  group_by(hour) %>%
+  summarize(avg_electricity =  mean(total, na.rm = TRUE),
+            avg_temperature = mean(`Dry Bulb Temperature [°F]`, na.rm = TRUE),
+            .group ="drop"
+            )
+```
+
+```{r}
+#County 4
+hourly_datacd4 = WeaEneCd4 %>%
+  group_by(hour) %>%
+  summarize(avg_electricity =  mean(total, na.rm = TRUE),
+            avg_temperature = mean(`Dry Bulb Temperature [°F]`, na.rm = TRUE),
+            .group ="drop"
+            )
+```
+
+```{r}
+#County 5 
+hourly_datacd5 = WeaEneCd5 %>%
+  group_by(hour) %>%
+  summarize(avg_electricity =  mean(total, na.rm = TRUE),
+            avg_temperature = mean(`Dry Bulb Temperature [°F]`, na.rm = TRUE),
+            .group ="drop"
+            )
+```
+
+#Creating the Predictive Model 
+
+```{r}
+#Creating a new data frame that collects the total energy sum from each county 
+modelcd1 = data.frame('total.energy' = WeaEneCd1$total, 'temperature'=  WeaEneCd1$`Dry Bulb Temperature [°F]`, 'wind.speed'= WeaEneCd1$`Wind Speed [m/s]`,'humidity'= WeaEneCd1$`Relative Humidity [%]`)
+#Getting rid of any missing data 
+modelcd1 = na.omit(modelcd1)
+#Making the model
+lm_total1 = lm(total.energy ~ ., data = modelcd1)
+summary(lm_total1)
+```
+
+```{r}
+#County 2
+modelcd2 = data.frame('total.energy' = WeaEneCd2$total, 'temperature'=  WeaEneCd2$`Dry Bulb Temperature [°F]`, 'wind.speed'= WeaEneCd2$`Wind Speed [m/s]`,'humidity'= WeaEneCd2$`Relative Humidity [%]`)
+#Getting rid of any missing data 
+modelcd2 = na.omit(modelcd2)
+#Making the model
+lm_total2 = lm(total.energy ~ ., data = modelcd2)
+summary(lm_total2)
+```
+
+```{r}
+#County 3
+modelcd3 = data.frame('total.energy' = WeaEneCd3$total, 'temperature'=  WeaEneCd3$`Dry Bulb Temperature [°F]`, 'wind.speed'= WeaEneCd3$`Wind Speed [m/s]`,'humidity'= WeaEneCd3$`Relative Humidity [%]`)
+#Getting rid of any missing data 
+modelcd3 = na.omit(modelcd3)
+#Making the model
+lm_total3 = lm(total.energy ~ ., data = modelcd3)
+summary(lm_total3)
+```
+
+```{r}
+#County 4
+modelcd4 = data.frame('total.energy' = WeaEneCd4$total, 'temperature'=  WeaEneCd4$`Dry Bulb Temperature [°F]`, 'wind.speed'= WeaEneCd4$`Wind Speed [m/s]`,'humidity'= WeaEneCd4$`Relative Humidity [%]`)
+#Getting rid of any missing data 
+modelcd4 = na.omit(modelcd4)
+#Making the model
+lm_total4 = lm(total.energy ~ ., data = modelcd4)
+summary(lm_total4)
+```
+
+```{r}
+#County 5
+modelcd5 = data.frame('total.energy' = WeaEneCd5$total, 'temperature'=  WeaEneCd5$`Dry Bulb Temperature [°F]`, 'wind.speed'= WeaEneCd5$`Wind Speed [m/s]`,'humidity'= WeaEneCd5$`Relative Humidity [%]`)
+#Getting rid of any missing data 
+modelcd5 = na.omit(modelcd5)
+#Making the model
+lm_total5 = lm(total.energy ~ ., data = modelcd5)
+summary(lm_total5)
+```
+
+#Creating new July Weather
+
+```{r}
+#Adding 5 Celsius to the temperature to be our predictive model
+NEWWeaEneCd1 = WeaEneCd1
+NEWWeaEneCd1$`Dry Bulb Temperature [°C]` = WeaEneCd1$`Dry Bulb Temperature [°C]` + 5
+NEWWeaEneCd1$`Dry Bulb Temperature [°F]` = convert_temp_to_fahrenheit(NEWWeaEneCd1$`Dry Bulb Temperature [°C]`)
+```
+
+```{r}
+#County 2
+NEWWeaEneCd2 = WeaEneCd2
+NEWWeaEneCd2$`Dry Bulb Temperature [°C]` = WeaEneCd2$`Dry Bulb Temperature [°C]` + 5
+NEWWeaEneCd2$`Dry Bulb Temperature [°F]` = convert_temp_to_fahrenheit(NEWWeaEneCd2$`Dry Bulb Temperature [°C]`)
+```
+
+```{r}
+#County 3
+NEWWeaEneCd3 = WeaEneCd3
+NEWWeaEneCd3$`Dry Bulb Temperature [°C]` = WeaEneCd3$`Dry Bulb Temperature [°C]` + 5
+NEWWeaEneCd3$`Dry Bulb Temperature [°F]` = convert_temp_to_fahrenheit(NEWWeaEneCd3$`Dry Bulb Temperature [°C]`)
+```
+
+```{r}
+#County 4
+NEWWeaEneCd4 = WeaEneCd4
+NEWWeaEneCd4$`Dry Bulb Temperature [°C]` = WeaEneCd4$`Dry Bulb Temperature [°C]` + 5
+NEWWeaEneCd4$`Dry Bulb Temperature [°F]` = convert_temp_to_fahrenheit(NEWWeaEneCd4$`Dry Bulb Temperature [°C]`)
+```
+
+```{r}
+#County 5
+NEWWeaEneCd5 = WeaEneCd5
+NEWWeaEneCd5$`Dry Bulb Temperature [°C]` = WeaEneCd5$`Dry Bulb Temperature [°C]` + 5
+NEWWeaEneCd5$`Dry Bulb Temperature [°F]` = convert_temp_to_fahrenheit(NEWWeaEneCd5$`Dry Bulb Temperature [°C]`)
+```
+
+## Creating energy functions based off the new weather
+
+```{r}
+#Creating a function based off the liner model
+NEWWeaEneCd1$total = -6.09309 + (0.21030*NEWWeaEneCd1$`Dry Bulb Temperature [°F]`) + -(0.29582*NEWWeaEneCd1$`Wind Speed [m/s]`) + (0.01537*NEWWeaEneCd1$`Relative Humidity [%]`)
+NEWWeaEneCd1 = NEWWeaEneCd1[,c(11:18)]
+```
+
+```{r}
+#County 2
+NEWWeaEneCd2$total = 6.123680 + (0.050118*NEWWeaEneCd2$`Dry Bulb Temperature [°F]`) + (0.304356*NEWWeaEneCd2$`Wind Speed [m/s]`) + (0.001636*NEWWeaEneCd2$`Relative Humidity [%]`)
+NEWWeaEneCd2 = NEWWeaEneCd2[,c(11:18)]
+```
+
+```{r}
+#County 3
+NEWWeaEneCd3$total = -13.892912 + (0.327632*NEWWeaEneCd3$`Dry Bulb Temperature [°F]`) + (-0.587691*NEWWeaEneCd3$`Wind Speed [m/s]`) + (-0.009852*NEWWeaEneCd3$`Relative Humidity [%]`)
+NEWWeaEneCd3 = NEWWeaEneCd3[,c(11:18)]
+```
+
+```{r}
+#County 4
+NEWWeaEneCd4$total = -14.425045 + (0.294598*NEWWeaEneCd4$`Dry Bulb Temperature [°F]`) + (0.097476*NEWWeaEneCd4$`Wind Speed [m/s]`) + (0.008676*NEWWeaEneCd4$`Relative Humidity [%]`)
+NEWWeaEneCd4 = NEWWeaEneCd4[,c(11:18)]
+```
+
+```{r}
+#County 5
+NEWWeaEneCd5$total = -7.93948 + (0.25077*NEWWeaEneCd5$`Dry Bulb Temperature [°F]`) + (-0.23788*NEWWeaEneCd5$`Wind Speed [m/s]`) + (0.01002*NEWWeaEneCd5$`Relative Humidity [%]`)
+NEWWeaEneCd5 = NEWWeaEneCd5[,c(11:18)]
+```
+
+#New Hourly Data Collection
+```{r}
+#Grouping the hourly usage of electricity and temperature group by hour 
+NEWhourly_datacd1 = NEWWeaEneCd1 %>%
+  group_by(hour) %>%
+  summarize(avg_electricity =  mean(total, na.rm = TRUE),
+            avg_temperature = mean(`Dry Bulb Temperature [°F]`, na.rm = TRUE),
+            .group ="drop"
+            )
+```
+
+```{r}
+#County 2
+NEWhourly_datacd2 = NEWWeaEneCd2 %>%
+  group_by(hour) %>%
+  summarize(avg_electricity =  mean(total, na.rm = TRUE),
+            avg_temperature = mean(`Dry Bulb Temperature [°F]`, na.rm = TRUE),
+            .group ="drop"
+            )
+```
+
+```{r}
+#County 3
+NEWhourly_datacd3 = NEWWeaEneCd3 %>%
+  group_by(hour) %>%
+  summarize(avg_electricity =  mean(total, na.rm = TRUE),
+            avg_temperature = mean(`Dry Bulb Temperature [°F]`, na.rm = TRUE),
+            .group ="drop"
+            )
+```
+
+```{r}
+#County 4
+NEWhourly_datacd4 = NEWWeaEneCd4 %>%
+  group_by(hour) %>%
+  summarize(avg_electricity =  mean(total, na.rm = TRUE),
+            avg_temperature = mean(`Dry Bulb Temperature [°F]`, na.rm = TRUE),
+            .group ="drop"
+            )
+```
+
+```{r}
+#County 5
+NEWhourly_datacd5 = NEWWeaEneCd5 %>%
+  group_by(hour) %>%
+  summarize(avg_electricity =  mean(total, na.rm = TRUE),
+            avg_temperature = mean(`Dry Bulb Temperature [°F]`, na.rm = TRUE),
+            .group ="drop"
+            )
+```
+
+#Predictive Modeling
+
+```{r}
+library(caret)
+
+# Set up 10-fold cross-validation
+train_control1 <- trainControl(method = "cv", number = 10)
+
+# Fit the model with cross-validation
+cv_model1 <- train(total.energy ~ 
+                    temperature + 
+                    humidity + 
+                    wind.speed, 
+                  data = modelcd1, 
+                  method = "lm", 
+                  trControl = train_control1)
+
+# View the cross-validation results
+print(cv_model1)
+
+svm_model1 <- svm(total.energy ~ .,
+                 data = modelcd1,
+                 type = "eps-regression",  # Regression
+                 kernel = "radial")        # Radial kernel (non-linear)
+NEWpredict1 = data.frame('total' = NEWWeaEneCd1$total, 'temperature' = NEWWeaEneCd1$`Dry Bulb Temperature [°F]`, 'wind.speed' = NEWWeaEneCd1$`Wind Speed [m/s]`, 'humidity' = NEWWeaEneCd1$`Relative Humidity [%]`)
+NEWpredict1 = na.omit(NEWpredict1)
+svm_predict1 = predict(svm_model1, newdata = NEWpredict1 )
+saveRDS(svm_model1, "svm_model_cd1.rds")
+```
+
+```{r}
+#County 2
+# Set up 10-fold cross-validation
+train_control2 <- trainControl(method = "cv", number = 10)
+
+# Fit the model with cross-validation
+cv_model2 <- train(total.energy ~ 
+                    temperature + 
+                    humidity + 
+                    wind.speed, 
+                  data = modelcd2, 
+                  method = "lm", 
+                  trControl = train_control2)
+
+# View the cross-validation results
+print(cv_model2)
+
+svm_model2 <- svm(total.energy ~ .,
+                 data = modelcd2,
+                 type = "eps-regression",  # Regression
+                 kernel = "radial")        # Radial kernel (non-linear)
+NEWpredict2 = data.frame('total' = NEWWeaEneCd2$total, 'temperature' = NEWWeaEneCd2$`Dry Bulb Temperature [°F]`, 'wind.speed' = NEWWeaEneCd2$`Wind Speed [m/s]`, 'humidity' = NEWWeaEneCd2$`Relative Humidity [%]`)
+NEWpredict2 = na.omit(NEWpredict2)
+svm_predict2 = predict(svm_model2, newdata = NEWpredict2 )
+saveRDS(svm_model2, "svm_model_cd2.rds")
+```
+
+```{r}
+#County 3
+# Set up 10-fold cross-validation
+train_control3 <- trainControl(method = "cv", number = 10)
+
+# Fit the model with cross-validation
+cv_model3 <- train(total.energy ~ 
+                    temperature + 
+                    humidity + 
+                    wind.speed, 
+                  data = modelcd3, 
+                  method = "lm", 
+                  trControl = train_control3)
+
+# View the cross-validation results
+print(cv_model3)
+
+svm_model3 <- svm(total.energy ~ .,
+                 data = modelcd3,
+                 type = "eps-regression",  # Regression
+                 kernel = "radial")        # Radial kernel (non-linear)
+NEWpredict3 = data.frame('total' = NEWWeaEneCd3$total, 'temperature' = NEWWeaEneCd3$`Dry Bulb Temperature [°F]`, 'wind.speed' = NEWWeaEneCd3$`Wind Speed [m/s]`, 'humidity' = NEWWeaEneCd3$`Relative Humidity [%]`)
+NEWpredict3 = na.omit(NEWpredict3)
+svm_predict3 = predict(svm_model3, newdata = NEWpredict3 )
+saveRDS(svm_model3, "svm_model_cd3.rds")
+```
+
+```{r}
+#County 4
+# Set up 10-fold cross-validation
+train_control4<- trainControl(method = "cv", number = 10)
+
+# Fit the model with cross-validation
+cv_model4 <- train(total.energy ~ 
+                    temperature + 
+                    humidity + 
+                    wind.speed, 
+                  data = modelcd4, 
+                  method = "lm", 
+                  trControl = train_control4)
+
+# View the cross-validation results
+print(cv_model4)
+
+svm_model4 <- svm(total.energy ~ .,
+                 data = modelcd4,
+                 type = "eps-regression",  # Regression
+                 kernel = "radial")        # Radial kernel (non-linear)
+NEWpredict4 = data.frame('total' = NEWWeaEneCd4$total, 'temperature' = NEWWeaEneCd4$`Dry Bulb Temperature [°F]`, 'wind.speed' = NEWWeaEneCd4$`Wind Speed [m/s]`, 'humidity' = NEWWeaEneCd4$`Relative Humidity [%]`)
+NEWpredict4 = na.omit(NEWpredict4)
+svm_predict4 = predict(svm_model4, newdata = NEWpredict4 )
+saveRDS(svm_model4, "svm_model_cd4.rds")
+```
+
+```{r}
+#County 5
+# Set up 10-fold cross-validation
+train_control5 <- trainControl(method = "cv", number = 10)
+
+# Fit the model with cross-validation
+cv_model5 <- train(total.energy ~ 
+                    temperature + 
+                    humidity + 
+                    wind.speed, 
+                  data = modelcd5, 
+                  method = "lm", 
+                  trControl = train_control5)
+
+# View the cross-validation results
+print(cv_model5)
+
+svm_model5 <- svm(total.energy ~ .,
+                 data = modelcd5,
+                 type = "eps-regression",  # Regression
+                 kernel = "radial")        # Radial kernel (non-linear)
+NEWpredict5 = data.frame('total' = NEWWeaEneCd5$total, 'temperature' = NEWWeaEneCd5$`Dry Bulb Temperature [°F]`, 'wind.speed' = NEWWeaEneCd5$`Wind Speed [m/s]`, 'humidity' = NEWWeaEneCd5$`Relative Humidity [%]`)
+NEWpredict5 = na.omit(NEWpredict5)
+svm_predict5 = predict(svm_model5, newdata = NEWpredict5 )
+saveRDS(svm_model5, "svm_model_cd5.rds")
+```
+
+## Including Plots
+
+#Ploting the Data
+
+```{r}
+#Plotting the weather and energy usage throughout the month
+library(ggplot2)
+ggplot(WeaEneCd1, aes(x = hour, y = `Dry Bulb Temperature [°F]`, group = hour)) + geom_boxplot(color = "#1f78b4", size = 1) + labs( x = "Time (July, in hours)", y = "Dry Bulb Temperature (°F)", title = "Dry Bulb Temperature Over Time (in County 1)") + theme_minimal(base_size = 14) + theme( plot.title = element_text(hjust = 0.5, face = "bold"), axis.title = element_text(face = "bold"), axis.text = element_text(color = "gray30"))
+
+ggplot(hourly_datacd1, aes(x = as.numeric(hour), y = avg_electricity)) +
+  geom_line(color = "#E63946", size = 1) +
+  geom_point(color = "#E63946", size = 2) +
+  xlab("Hour of the Day") +
+  ylab("Average Electricity Consumption (kWh)") +
+  ggtitle("Average Electricity Consumption by Hour (in County 1)") +
+  scale_x_continuous(breaks = 0:23) +
+  theme_minimal(base_size = 10) +
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold"),
+    axis.title = element_text(face = "bold"),
+    axis.text = element_text(color = "gray30")
+  )
+
+ggplot(hourly_datacd1, aes(x = hour, y = avg_temperature, color = avg_electricity)) +
+  geom_line(size = 1.2) +
+  geom_point(size = 3) +
+  labs(
+    title = "Hourly Avg Electricity Use with Temperature(in County 1)",
+    x = "Hour of the Day",
+    y = "Avg Temperature Use (F)",
+    color = "Electricity Use (kWh)"
+  ) +
+  scale_color_gradient(low = "#32CD32" , high = "#FF6347") +  # Bright red to bright green
+  theme_minimal(base_size = 13) +
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold"),
+    axis.title = element_text(face = "bold"),
+    axis.text = element_text(color = "gray30"),
+    legend.title = element_text(face = "bold")
+  )
+```
+
+
+```{r}
+#County 2
+ggplot(WeaEneCd2, aes(x = hour, y = `Dry Bulb Temperature [°F]`, group = hour)) + geom_boxplot(color = "#1f78b4", size = 1) + labs( x = "Time (July, in hours)", y = "Dry Bulb Temperature (°F)", title = "Dry Bulb Temperature Over Time (in County 2)") + theme_minimal(base_size = 14) + theme( plot.title = element_text(hjust = 0.5, face = "bold"), axis.title = element_text(face = "bold"), axis.text = element_text(color = "gray30"))
+
+ggplot(hourly_datacd2, aes(x = as.numeric(hour), y = avg_electricity)) +
+  geom_line(color = "#E63946", size = 1) +
+  geom_point(color = "#E63946", size = 2) +
+  xlab("Hour of the Day") +
+  ylab("Average Electricity Consumption (kWh)") +
+  ggtitle("Average Electricity Consumption by Hour(in County 2)") +
+  scale_x_continuous(breaks = 0:23) +
+  theme_minimal(base_size = 10) +
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold"),
+    axis.title = element_text(face = "bold"),
+    axis.text = element_text(color = "gray30")
+  )
+ggplot(hourly_datacd2, aes(x = hour, y = avg_temperature, color = avg_electricity)) +
+  geom_line(size = 1.2) +
+  geom_point(size = 3) +
+  labs(
+    title = "Hourly Avg Electricity Use with Temperature(in County 2)",
+    x = "Hour of the Day",
+    y = "Avg Temperature Use (F)",
+    color = "Electricity Use (kWh)"
+  ) +
+  scale_color_gradient(low = "#32CD32" , high = "#FF6347") +  # Bright red to bright green
+  theme_minimal(base_size = 13) +
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold"),
+    axis.title = element_text(face = "bold"),
+    axis.text = element_text(color = "gray30"),
+    legend.title = element_text(face = "bold")
+  )
+```
+
+```{r}
+#County 3
+ggplot(WeaEneCd3, aes(x = hour, y = `Dry Bulb Temperature [°F]`, group = hour)) + geom_boxplot(color = "#1f78b4", size = 1) + labs( x = "Time (July, in hours)", y = "Dry Bulb Temperature (°F)", title = "Dry Bulb Temperature Over Time (in County 3)") + theme_minimal(base_size = 14) + theme( plot.title = element_text(hjust = 0.5, face = "bold"), axis.title = element_text(face = "bold"), axis.text = element_text(color = "gray30"))
+
+ggplot(hourly_datacd3, aes(x = as.numeric(hour), y = avg_electricity)) +
+  geom_line(color = "#E63946", size = 1) +
+  geom_point(color = "#E63946", size = 2) +
+  xlab("Hour of the Day") +
+  ylab("Average Electricity Consumption (kWh)") +
+  ggtitle("Average Electricity Consumption by Hour(in County 3)") +
+  scale_x_continuous(breaks = 0:23) +
+  theme_minimal(base_size = 10) +
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold"),
+    axis.title = element_text(face = "bold"),
+    axis.text = element_text(color = "gray30")
+  )
+ggplot(hourly_datacd3, aes(x = hour, y = avg_temperature, color = avg_electricity)) +
+  geom_line(size = 1.2) +
+  geom_point(size = 3) +
+  labs(
+    title = "Hourly Avg Electricity Use with Temperature(in County 3)",
+    x = "Hour of the Day",
+    y = "Avg Temperature Use (F)",
+    color = "Electricity Use (kWh)"
+  ) +
+  scale_color_gradient(low = "#32CD32" , high = "#FF6347") +  # Bright red to bright green
+  theme_minimal(base_size = 13) +
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold"),
+    axis.title = element_text(face = "bold"),
+    axis.text = element_text(color = "gray30"),
+    legend.title = element_text(face = "bold")
+  )
+```
+
+```{r}
+#County 4
+ggplot(WeaEneCd4, aes(x = hour, y = `Dry Bulb Temperature [°F]`, group = hour)) + geom_boxplot(color = "#1f78b4", size = 1) + labs( x = "Time (July, in hours)", y = "Dry Bulb Temperature (°F)", title = "Dry Bulb Temperature Over Time (in County 4)") + theme_minimal(base_size = 14) + theme( plot.title = element_text(hjust = 0.5, face = "bold"), axis.title = element_text(face = "bold"), axis.text = element_text(color = "gray30"))
+
+ggplot(hourly_datacd4, aes(x = as.numeric(hour), y = avg_electricity)) +
+  geom_line(color = "#E63946", size = 1) +
+  geom_point(color = "#E63946", size = 2) +
+  xlab("Hour of the Day") +
+  ylab("Average Electricity Consumption (kWh)") +
+  ggtitle("Average Electricity Consumption by Hour(in County 4)") +
+  scale_x_continuous(breaks = 0:23) +
+  theme_minimal(base_size = 10) +
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold"),
+    axis.title = element_text(face = "bold"),
+    axis.text = element_text(color = "gray30")
+  )
+ggplot(hourly_datacd4, aes(x = hour, y = avg_temperature, color = avg_electricity)) +
+  geom_line(size = 1.2) +
+  geom_point(size = 3) +
+  labs(
+    title = "Hourly Avg Electricity Use with Temperature(in County 4)",
+    x = "Hour of the Day",
+    y = "Avg Temperature Use (F)",
+    color = "Electricity Use (kWh)"
+  ) +
+  scale_color_gradient(low = "#32CD32" , high = "#FF6347") +  # Bright red to bright green
+  theme_minimal(base_size = 13) +
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold"),
+    axis.title = element_text(face = "bold"),
+    axis.text = element_text(color = "gray30"),
+    legend.title = element_text(face = "bold")
+  )
+```
+
+```{r}
+#County 5
+ggplot(WeaEneCd5, aes(x = hour, y = `Dry Bulb Temperature [°F]`, group = hour)) + geom_boxplot(color = "#1f78b4", size = 1) + labs( x = "Time (July, in hours)", y = "Dry Bulb Temperature (°F)", title = "Dry Bulb Temperature Over Time (in County 5)") + theme_minimal(base_size = 14) + theme( plot.title = element_text(hjust = 0.5, face = "bold"), axis.title = element_text(face = "bold"), axis.text = element_text(color = "gray30"))
+
+ggplot(hourly_datacd5, aes(x = as.numeric(hour), y = avg_electricity)) +
+  geom_line(color = "#E63946", size = 1) +
+  geom_point(color = "#E63946", size = 2) +
+  xlab("Hour of the Day") +
+  ylab("Average Electricity Consumption (kWh)") +
+  ggtitle("Average Electricity Consumption by Hour (in County 5)") +
+  scale_x_continuous(breaks = 0:23) +
+  theme_minimal(base_size = 10) +
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold"),
+    axis.title = element_text(face = "bold"),
+    axis.text = element_text(color = "gray30")
+  )
+ggplot(hourly_datacd5, aes(x = hour, y = avg_temperature, color = avg_electricity)) +
+  geom_line(size = 1.2) +
+  geom_point(size = 3) +
+  labs(
+    title = "Hourly Avg Electricity Use with Temperature(in County 5)",
+    x = "Hour of the Day",
+    y = "Avg Temperature Use (F)",
+    color = "Electricity Use (kWh)"
+  ) +
+  scale_color_gradient(low = "#32CD32" , high = "#FF6347") +  # Bright red to bright green
+  theme_minimal(base_size = 13) +
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold"),
+    axis.title = element_text(face = "bold"),
+    axis.text = element_text(color = "gray30"),
+    legend.title = element_text(face = "bold")
+  )
+```
+
+```{r}
+plot(lm_total$residuals)
+```
+
+#NEW July Weather Data (Temperature increased by 5 degrees Celcius)
+
+```{r}
+ggplot(NEWWeaEneCd1, aes(x = hour, y = `Dry Bulb Temperature [°F]`, group = hour)) + geom_boxplot(color = "#1f78b4", size = 1) + labs( x = "Time (July, in hours)", y = "Dry Bulb Temperature (°F)", title = "Dry Bulb Temperature Over Time (in County 1 w/ Inc)") + theme_minimal(base_size = 14) + theme( plot.title = element_text(hjust = 0.5, face = "bold"), axis.title = element_text(face = "bold"), axis.text = element_text(color = "gray30"))
+
+ggplot(NEWhourly_datacd1, aes(x = as.numeric(hour), y = avg_electricity)) +
+  geom_line(color = "#E63946", size = 1) +
+  geom_point(color = "#E63946", size = 2) +
+  xlab("Hour of the Day") +
+  ylab("Average Electricity Consumption (kWh)") +
+  ggtitle("Average Electricity Consumption by Hour (in County 1 w/ Inc.)") +
+  scale_x_continuous(breaks = 0:23) +
+  theme_minimal(base_size = 10) +
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold"),
+    axis.title = element_text(face = "bold"),
+    axis.text = element_text(color = "gray30")
+  )
+ggplot(NEWhourly_datacd1, aes(x = hour, y = avg_temperature, color = avg_electricity)) +
+  geom_line(size = 1.2) +
+  geom_point(size = 3) +
+  labs(
+    title = "Hourly Avg Electricity Use with Temperature(in County 1 w/ Inc.)",
+    x = "Hour of the Day",
+    y = "Avg Temperature Use (F)",
+    color = "Electricity Use (kWh)"
+  ) +
+  scale_color_gradient(low = "#32CD32" , high = "#FF6347") +  # Bright red to bright green
+  theme_minimal(base_size = 13) +
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold"),
+    axis.title = element_text(face = "bold"),
+    axis.text = element_text(color = "gray30"),
+    legend.title = element_text(face = "bold")
+  )
+```
+
+```{r}
+#County 2
+ggplot(NEWWeaEneCd2, aes(x = hour, y = `Dry Bulb Temperature [°F]`, group = hour)) + geom_boxplot(color = "#1f78b4", size = 1) + labs( x = "Time (July, in hours)", y = "Dry Bulb Temperature (°F)", title = "Dry Bulb Temperature Over Time (in County 2 w/ Inc.)") + theme_minimal(base_size = 14) + theme( plot.title = element_text(hjust = 0.5, face = "bold"), axis.title = element_text(face = "bold"), axis.text = element_text(color = "gray30"))
+
+ggplot(NEWhourly_datacd2, aes(x = as.numeric(hour), y = avg_electricity)) +
+  geom_line(color = "#E63946", size = 1) +
+  geom_point(color = "#E63946", size = 2) +
+  xlab("Hour of the Day") +
+  ylab("Average Electricity Consumption (kWh)") +
+  ggtitle("Average Electricity Consumption by Hour (in County 2 w/ Inc.)") +
+  scale_x_continuous(breaks = 0:23) +
+  theme_minimal(base_size = 10) +
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold"),
+    axis.title = element_text(face = "bold"),
+    axis.text = element_text(color = "gray30")
+  )
+ggplot(NEWhourly_datacd2, aes(x = hour, y = avg_temperature, color = avg_electricity)) +
+  geom_line(size = 1.2) +
+  geom_point(size = 3) +
+  labs(
+    title = "Hourly Avg Electricity Use with Temperature(in County 2 w/ Inc.)",
+    x = "Hour of the Day",
+    y = "Avg Temperature Use (F)",
+    color = "Electricity Use (kWh)"
+  ) +
+  scale_color_gradient(low = "#32CD32" , high = "#FF6347") +  # Bright red to bright green
+  theme_minimal(base_size = 13) +
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold"),
+    axis.title = element_text(face = "bold"),
+    axis.text = element_text(color = "gray30"),
+    legend.title = element_text(face = "bold")
+  )
+```
+
+```{r}
+#County 3
+ggplot(NEWWeaEneCd3, aes(x = hour, y = `Dry Bulb Temperature [°F]`, group = hour)) + geom_boxplot(color = "#1f78b4", size = 1) + labs( x = "Time (July, in hours)", y = "Dry Bulb Temperature (°F)", title = "Dry Bulb Temperature Over Time (in County 3 w/ Inc.)") + theme_minimal(base_size = 14) + theme( plot.title = element_text(hjust = 0.5, face = "bold"), axis.title = element_text(face = "bold"), axis.text = element_text(color = "gray30"))
+
+ggplot(NEWhourly_datacd3, aes(x = as.numeric(hour), y = avg_electricity)) +
+  geom_line(color = "#E63946", size = 1) +
+  geom_point(color = "#E63946", size = 2) +
+  xlab("Hour of the Day") +
+  ylab("Average Electricity Consumption (kWh)") +
+  ggtitle("Average Electricity Consumption by Hour (in County 3 w/ Inc.)") +
+  scale_x_continuous(breaks = 0:23) +
+  theme_minimal(base_size = 10) +
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold"),
+    axis.title = element_text(face = "bold"),
+    axis.text = element_text(color = "gray30")
+  )
+ggplot(NEWhourly_datacd3, aes(x = hour, y = avg_temperature, color = avg_electricity)) +
+  geom_line(size = 1.2) +
+  geom_point(size = 3) +
+  labs(
+    title = "Hourly Avg Electricity Use with Temperature(in County 3 w/ Inc.)",
+    x = "Hour of the Day",
+    y = "Avg Temperature Use (F)",
+    color = "Electricity Use (kWh)"
+  ) +
+  scale_color_gradient(low = "#32CD32" , high = "#FF6347") +  # Bright red to bright green
+  theme_minimal(base_size = 13) +
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold"),
+    axis.title = element_text(face = "bold"),
+    axis.text = element_text(color = "gray30"),
+    legend.title = element_text(face = "bold")
+  )
+```
+
+```{r}
+#County 4
+ggplot(NEWWeaEneCd4, aes(x = hour, y = `Dry Bulb Temperature [°F]`, group = hour)) + geom_boxplot(color = "#1f78b4", size = 1) + labs( x = "Time (July, in hours)", y = "Dry Bulb Temperature (°F)", title = "Dry Bulb Temperature Over Time (in County 4 w/ Inc.)") + theme_minimal(base_size = 14) + theme( plot.title = element_text(hjust = 0.5, face = "bold"), axis.title = element_text(face = "bold"), axis.text = element_text(color = "gray30"))
+
+ggplot(NEWhourly_datacd4, aes(x = as.numeric(hour), y = avg_electricity)) +
+  geom_line(color = "#E63946", size = 1) +
+  geom_point(color = "#E63946", size = 2) +
+  xlab("Hour of the Day") +
+  ylab("Average Electricity Consumption (kWh)") +
+  ggtitle("Average Electricity Consumption by Hour (in County 4 w/ Inc.)") +
+  scale_x_continuous(breaks = 0:23) +
+  theme_minimal(base_size = 10) +
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold"),
+    axis.title = element_text(face = "bold"),
+    axis.text = element_text(color = "gray30")
+  )
+ggplot(NEWhourly_datacd4, aes(x = hour, y = avg_temperature, color = avg_electricity)) +
+  geom_line(size = 1.2) +
+  geom_point(size = 3) +
+  labs(
+    title = "Hourly Avg Electricity Use with Temperature(in County 4 w/ Inc.)",
+    x = "Hour of the Day",
+    y = "Avg Temperature Use (F)",
+    color = "Electricity Use (kWh)"
+  ) +
+  scale_color_gradient(low = "#32CD32" , high = "#FF6347") +  # Bright red to bright green
+  theme_minimal(base_size = 13) +
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold"),
+    axis.title = element_text(face = "bold"),
+    axis.text = element_text(color = "gray30"),
+    legend.title = element_text(face = "bold")
+  )
+```
+
+```{r}
+#County 5
+ggplot(NEWWeaEneCd5, aes(x = hour, y = `Dry Bulb Temperature [°F]`, group = hour)) + geom_boxplot(color = "#1f78b4", size = 1) + labs( x = "Time (July, in hours)", y = "Dry Bulb Temperature (°F)", title = "Dry Bulb Temperature Over Time (in County 5)") + theme_minimal(base_size = 14) + theme( plot.title = element_text(hjust = 0.5, face = "bold"), axis.title = element_text(face = "bold"), axis.text = element_text(color = "gray30"))
+
+ggplot(NEWhourly_datacd5, aes(x = as.numeric(hour), y = avg_electricity)) +
+  geom_line(color = "#E63946", size = 1) +
+  geom_point(color = "#E63946", size = 2) +
+  xlab("Hour of the Day") +
+  ylab("Average Electricity Consumption (kWh)") +
+  ggtitle("Average Electricity Consumption by Hour (in County 5 w/ Inc.)") +
+  scale_x_continuous(breaks = 0:23) +
+  theme_minimal(base_size = 10) +
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold"),
+    axis.title = element_text(face = "bold"),
+    axis.text = element_text(color = "gray30")
+  )
+ggplot(NEWhourly_datacd5, aes(x = hour, y = avg_temperature, color = avg_electricity)) +
+  geom_line(size = 1.2) +
+  geom_point(size = 3) +
+  labs(
+    title = "Hourly Avg Electricity Use with Temperature(in County 5 w/ Inc.)",
+    x = "Hour of the Day",
+    y = "Avg Temperature Use (F)",
+    color = "Electricity Use (kWh)"
+  ) +
+  scale_color_gradient(low = "#32CD32" , high = "#FF6347") +  # Bright red to bright green
+  theme_minimal(base_size = 13) +
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold"),
+    axis.title = element_text(face = "bold"),
+    axis.text = element_text(color = "gray30"),
+    legend.title = element_text(face = "bold")
+  )
+```
+
+#Actually VS Predicted
+
+```{r}
+# Create a data frame for plotting
+svm_results1 <- data.frame(
+  Actual = NEWpredict1$total,
+  Predicted = svm_predict1
+)
+
+# Plot actual vs predicted values
+ggplot(svm_results1, aes(x = Actual, y = Predicted)) +
+  geom_point(color = "red", alpha = 0.6) +  # Scatter plot of actual vs predicted
+  geom_abline(slope = 1, intercept = 0, color = "green") +  # 45-degree line (perfect prediction)
+  labs(
+    title = "SVM Model: Actual vs Predicted Total Electricity Consumption (in County 1)",
+    x = "Actual Total Electricity Consumption (kWh)",
+    y = "Predicted Total Electricity Consumption (kWh)"
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold"),
+    axis.title = element_text(face = "bold"),
+    axis.text = element_text(color = "gray30")
+  )
+
+```
+
+```{r}
+# Create a data frame for plotting
+svm_results2 <- data.frame(
+  Actual = NEWpredict2$total,
+  Predicted = svm_predict2
+)
+
+# Plot actual vs predicted values
+ggplot(svm_results2, aes(x = Actual, y = Predicted)) +
+  geom_point(color = "red", alpha = 0.6) +  # Scatter plot of actual vs predicted
+  geom_abline(slope = 1, intercept = 0, color = "green") +  # 45-degree line (perfect prediction)
+  labs(
+    title = "SVM Model: Actual vs Predicted Total Electricity Consumption (in County 2)",
+    x = "Actual Total Electricity Consumption (kWh)",
+    y = "Predicted Total Electricity Consumption (kWh)"
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold"),
+    axis.title = element_text(face = "bold"),
+    axis.text = element_text(color = "gray30")
+  )
+```
+
+```{r}
+# Create a data frame for plotting
+svm_results3 <- data.frame(
+  Actual = NEWpredict3$total,
+  Predicted = svm_predict3
+)
+
+# Plot actual vs predicted values
+ggplot(svm_results3, aes(x = Actual, y = Predicted)) +
+  geom_point(color = "red", alpha = 0.6) +  # Scatter plot of actual vs predicted
+  geom_abline(slope = 1, intercept = 0, color = "green") +  # 45-degree line (perfect prediction)
+  labs(
+    title = "SVM Model: Actual vs Predicted Total Electricity Consumption (in County 3)",
+    x = "Actual Total Electricity Consumption (kWh)",
+    y = "Predicted Total Electricity Consumption (kWh)"
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold"),
+    axis.title = element_text(face = "bold"),
+    axis.text = element_text(color = "gray30")
+  )
+```
+
+```{r}
+# Create a data frame for plotting
+svm_results4 <- data.frame(
+  Actual = NEWpredict4$total,
+  Predicted = svm_predict4
+)
+
+# Plot actual vs predicted values
+ggplot(svm_results4, aes(x = Actual, y = Predicted)) +
+  geom_point(color = "red", alpha = 0.6) +  # Scatter plot of actual vs predicted
+  geom_abline(slope = 1, intercept = 0, color = "green") +  # 45-degree line (perfect prediction)
+  labs(
+    title = "SVM Model: Actual vs Predicted Total Electricity Consumption (in County 4)",
+    x = "Actual Total Electricity Consumption (kWh)",
+    y = "Predicted Total Electricity Consumption (kWh)"
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold"),
+    axis.title = element_text(face = "bold"),
+    axis.text = element_text(color = "gray30")
+  )
+```
+
+```{r}
+# Create a data frame for plotting
+svm_results5 <- data.frame(
+  Actual = NEWpredict5$total,
+  Predicted = svm_predict5
+)
+
+# Plot actual vs predicted values
+ggplot(svm_results5, aes(x = Actual, y = Predicted)) +
+  geom_point(color = "red", alpha = 0.6) +  # Scatter plot of actual vs predicted
+  geom_abline(slope = 1, intercept = 0, color = "green") +  # 45-degree line (perfect prediction)
+  labs(
+    title = "SVM Model: Actual vs Predicted Total Electricity Consumption (in County 5)",
+    x = "Actual Total Electricity Consumption (kWh)",
+    y = "Predicted Total Electricity Consumption (kWh)"
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold"),
+    axis.title = element_text(face = "bold"),
+    axis.text = element_text(color = "gray30")
+  )
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
